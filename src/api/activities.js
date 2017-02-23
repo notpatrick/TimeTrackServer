@@ -33,6 +33,7 @@ export default ({
 		body,
 	}, res) {
     body.id = activites.length.toString(36);
+    console.log(body);
     activites.push(body);
     res.json(body);
   },
