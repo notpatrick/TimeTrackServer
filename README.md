@@ -13,8 +13,7 @@ Here will be a description...
 ## Installation
 
 1. Download and install [node](https://nodejs.org/)
-2. Install Cordova and Ionic `$ npm install -g cordova ionic`
-3. Clone the repository `$ git clone git@github.com:notpatrick/TimeTrackServer.git`
+2. Clone the repository `$ git clone git@github.com:notpatrick/TimeTrackServer.git`
 
 ## Build it
 
