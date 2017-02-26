@@ -1,6 +1,6 @@
+import v4 from 'uuid/v4';
 import resource from 'resource-router-middleware';
 import Activity from '../models/activity.schema';
-import v4 from 'uuid/v4';
 
 
 export default ({
@@ -16,7 +16,7 @@ export default ({
    */
   load(req, id, callback) {
     const filter = {
-      id: activity.id,
+      id,
     };
 
     Activity.findOne(filter).exec()
@@ -45,11 +45,15 @@ export default ({
   create({
     body,
   }, res) {
+    // TODO: use icons from body as soon as users can pick them in app
+    const iconNames = ['bicycle', 'cash', 'car', 'school', 'body', 'restaurant', 'game-controller-a', 'american-football'];
+    const randomIcon = iconNames[Math.floor(Math.random() * iconNames.length)];
+
     const newActivity = new Activity({
       id: v4(),
       name: body.name,
       type: body.type,
-      icon: body.icon,
+      icon: randomIcon,
       elapsedSeconds: 0,
     });
 
