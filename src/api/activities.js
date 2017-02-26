@@ -1,7 +1,7 @@
 import resource from 'resource-router-middleware';
-import activitiesModel from '../models/activities';
+import Activity from '../models/activity.schema';
+import v4 from 'uuid/v4';
 
-let activites = Array.from(activitiesModel);
 
 export default ({
   config,
@@ -15,28 +15,50 @@ export default ({
    *  Errors terminate the request, success sets `req[id] = data`.
    */
   load(req, id, callback) {
-    const activity = activites.find(a => a.id === id),
-      err = activity ? null : 'Not found';
-    console.log(id, activity);
-    callback(err, activity);
+    const filter = {
+      id: activity.id,
+    };
+
+    Activity.findOne(filter).exec()
+      .catch((error) => {
+        console.log(error);
+        callback('Not found');
+      })
+      .then((result) => {
+        callback(null, result);
+      });
   },
 
   /** GET / - List all entities */
   list({
     params,
   }, res) {
-    res.json(activites);
+    Activity.find().exec()
+      .catch((error) => {
+        console.log(error);
+        res.sendStatus(500);
+      })
+      .then(activites => res.json(activites));
   },
 
   /** POST / - Create a new entity */
   create({
     body,
   }, res) {
-    body.id = activites.length.toString(36);
-    body.elapsedSeconds = 0;
-    console.log(body);
-    activites.push(body);
-    res.json(body);
+    const newActivity = new Activity({
+      id: v4(),
+      name: body.name,
+      type: body.type,
+      icon: body.icon,
+      elapsedSeconds: 0,
+    });
+
+    newActivity.save()
+      .catch((error) => {
+        console.log(error);
+        res.sendStatus(500);
+      })
+      .then(activity => res.json(activity));
   },
 
   /** GET /:id - Return a given entity */
@@ -51,24 +73,34 @@ export default ({
     activity,
     body,
   }, res) {
-    let result = {};
-    activites = activites.map((a) => {
-      if (a.id === activity.id) {
-        result = Object.assign({}, {
-          id: activity.id,
-        }, body);
-        return result;
-      }
-      return a;
-    });
-    res.json(result);
+    const filter = {
+      id: activity.id,
+    };
+    const options = {
+      new: true,
+    };
+
+    Activity.findOneAndUpdate(filter, body, options).exec()
+      .catch((error) => {
+        console.log(error);
+        res.sendStatus(500);
+      })
+      .then(result => res.json(result));
   },
 
   /** DELETE /:id - Delete a given entity */
   delete({
     activity,
   }, res) {
-    activites = activites.filter(a => a !== activity);
-    res.sendStatus(204);
+    const filter = {
+      id: activity.id,
+    };
+
+    Activity.findOneAndRemove(filter).exec()
+      .catch((error) => {
+        console.log(error);
+        res.sendStatus(500);
+      })
+      .then(res.sendStatus(204));
   },
 });

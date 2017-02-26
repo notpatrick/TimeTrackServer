@@ -22,7 +22,8 @@
         "valid-typeof": "warn",
         "no-console": "off",
         "no-tabs": "off",
-        "no-param-reassign":"off",
-        "one-var": "off"
+        "no-param-reassign": "off",
+        "one-var": "off",
+        "eol-last": "off"
     }
 }
