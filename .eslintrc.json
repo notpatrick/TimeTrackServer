@@ -21,7 +21,7 @@
         "constructor-super": "warn",
         "valid-typeof": "warn",
         "no-console": "off",
-        "no-tabs": "off",
+        "no-tabs": "warn",
         "no-param-reassign": "off",
         "one-var": "off",
         "eol-last": "off"
