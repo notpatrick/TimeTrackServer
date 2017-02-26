@@ -5,4 +5,4 @@
 .DS_Store
 .vscode
 
-src/credentials
+src/credentials.js
