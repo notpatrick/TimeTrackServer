@@ -45,14 +45,10 @@ export default ({
   create({
     body,
   }, res) {
-    // TODO: use icons from body as soon as users can pick them in app
-    const iconNames = ['bicycle', 'cash', 'car', 'school', 'body', 'restaurant', 'game-controller-a', 'american-football'];
-    const randomIcon = iconNames[Math.floor(Math.random() * iconNames.length)];
-
     const newActivity = new Activity({
       id: v4(),
       name: body.name,
-      iconname: randomIcon,
+      iconname: body.iconname,
       category: body.category,
       user: body.user,
     });
@@ -85,7 +81,10 @@ export default ({
     };
 
     Activity.findOneAndUpdate(filter, body, options).exec()
-      .then(result => res.json(result))
+      .then((result) => {
+        console.log(JSON.stringify(result));
+        res.json(result);
+      })
       .catch((error) => {
         console.log(error);
         res.sendStatus(500);
