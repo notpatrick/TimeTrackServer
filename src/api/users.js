@@ -1,6 +1,6 @@
 import v4 from 'uuid/v4';
 import resource from 'resource-router-middleware';
-import Activity from '../models/activity';
+import User from '../models/user';
 
 
 export default ({
@@ -9,7 +9,7 @@ export default ({
 }) => resource({
 
   /** Property name to store preloaded entity on `request`. */
-  id: 'activity',
+  id: 'user',
 
   /** For requests with an `id`, you can auto-load the entity.
    *  Errors terminate the request, success sets `req[id] = data`.
@@ -19,7 +19,7 @@ export default ({
       id,
     };
 
-    Activity.findOne(filter).exec()
+    User.findOne(filter).exec()
       .then((result) => {
         callback(null, result);
       })
@@ -29,11 +29,11 @@ export default ({
       });
   },
 
-  /** GET activities/ - List all entities */
+  /** GET users/ - List all entities */
   list({
     params,
   }, res) {
-    Activity.find().exec()
+    User.find().exec()
       .then(activites => res.json(activites))
       .catch((error) => {
         console.log(error);
@@ -41,50 +41,45 @@ export default ({
       });
   },
 
-  /** POST activities/ - Create a new entity */
+  /** POST users/ - Create a new entity */
   create({
     body,
   }, res) {
-    // TODO: use icons from body as soon as users can pick them in app
-    const iconNames = ['bicycle', 'cash', 'car', 'school', 'body', 'restaurant', 'game-controller-a', 'american-football'];
-    const randomIcon = iconNames[Math.floor(Math.random() * iconNames.length)];
-
-    const newActivity = new Activity({
+    const newUser = new User({
       id: v4(),
       name: body.name,
-      iconname: randomIcon,
-      category: body.category,
-      user: body.user,
+      password: body.password,
+      email: body.email,
     });
 
-    newActivity.save()
-      .then(activity => res.json(activity))
+    newUser.save()
+      .then(user => res.json(user))
       .catch((error) => {
         console.log(error);
         res.sendStatus(500);
       });
   },
 
-  /** GET activities/:id - Return a given entity */
+  /** GET users/:id - Return a given entity */
   read({
-    activity,
+    user,
   }, res) {
-    res.json(activity);
+    res.json(user);
   },
 
-  /** PUT activities/:id - Update a given entity */
+  /** PUT users/:id - Update a given entity */
   update({
-    activity,
+    user,
     body,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: user.id,
     };
     const options = {
       new: true,
     };
 
-    Activity.findOneAndUpdate(filter, body, options).exec()
+    User.findOneAndUpdate(filter, body, options).exec()
       .then(result => res.json(result))
       .catch((error) => {
         console.log(error);
@@ -92,15 +87,15 @@ export default ({
       });
   },
 
-  /** DELETE activities/:id - Delete a given entity */
+  /** DELETE users/:id - Delete a given entity */
   delete({
-    activity,
+    user,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: user.id,
     };
 
-    Activity.findOneAndRemove(filter).exec()
+    User.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
       .catch((error) => {
         console.log(error);

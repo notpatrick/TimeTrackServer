@@ -1,6 +1,6 @@
 import v4 from 'uuid/v4';
 import resource from 'resource-router-middleware';
-import Activity from '../models/activity';
+import Timesheet from '../models/timesheet';
 
 
 export default ({
@@ -9,7 +9,7 @@ export default ({
 }) => resource({
 
   /** Property name to store preloaded entity on `request`. */
-  id: 'activity',
+  id: 'timesheet',
 
   /** For requests with an `id`, you can auto-load the entity.
    *  Errors terminate the request, success sets `req[id] = data`.
@@ -19,7 +19,7 @@ export default ({
       id,
     };
 
-    Activity.findOne(filter).exec()
+    Timesheet.findOne(filter).exec()
       .then((result) => {
         callback(null, result);
       })
@@ -29,11 +29,11 @@ export default ({
       });
   },
 
-  /** GET activities/ - List all entities */
+  /** GET timesheets/ - List all entities */
   list({
     params,
   }, res) {
-    Activity.find().exec()
+    Timesheet.find().exec()
       .then(activites => res.json(activites))
       .catch((error) => {
         console.log(error);
@@ -41,7 +41,7 @@ export default ({
       });
   },
 
-  /** POST activities/ - Create a new entity */
+  /** POST timesheets/ - Create a new entity */
   create({
     body,
   }, res) {
@@ -49,7 +49,7 @@ export default ({
     const iconNames = ['bicycle', 'cash', 'car', 'school', 'body', 'restaurant', 'game-controller-a', 'american-football'];
     const randomIcon = iconNames[Math.floor(Math.random() * iconNames.length)];
 
-    const newActivity = new Activity({
+    const newTimesheet = new Timesheet({
       id: v4(),
       name: body.name,
       iconname: randomIcon,
@@ -57,34 +57,34 @@ export default ({
       user: body.user,
     });
 
-    newActivity.save()
-      .then(activity => res.json(activity))
+    newTimesheet.save()
+      .then(timesheet => res.json(timesheet))
       .catch((error) => {
         console.log(error);
         res.sendStatus(500);
       });
   },
 
-  /** GET activities/:id - Return a given entity */
+  /** GET timesheets/:id - Return a given entity */
   read({
-    activity,
+    timesheet,
   }, res) {
-    res.json(activity);
+    res.json(timesheet);
   },
 
-  /** PUT activities/:id - Update a given entity */
+  /** PUT timesheets/:id - Update a given entity */
   update({
-    activity,
+    timesheet,
     body,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: timesheet.id,
     };
     const options = {
       new: true,
     };
 
-    Activity.findOneAndUpdate(filter, body, options).exec()
+    Timesheet.findOneAndUpdate(filter, body, options).exec()
       .then(result => res.json(result))
       .catch((error) => {
         console.log(error);
@@ -92,15 +92,15 @@ export default ({
       });
   },
 
-  /** DELETE activities/:id - Delete a given entity */
+  /** DELETE timesheets/:id - Delete a given entity */
   delete({
-    activity,
+    timesheet,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: timesheet.id,
     };
 
-    Activity.findOneAndRemove(filter).exec()
+    Timesheet.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
       .catch((error) => {
         console.log(error);

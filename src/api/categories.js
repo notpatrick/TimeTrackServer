@@ -1,6 +1,6 @@
 import v4 from 'uuid/v4';
 import resource from 'resource-router-middleware';
-import Activity from '../models/activity';
+import Category from '../models/category';
 
 
 export default ({
@@ -9,7 +9,7 @@ export default ({
 }) => resource({
 
   /** Property name to store preloaded entity on `request`. */
-  id: 'activity',
+  id: 'category',
 
   /** For requests with an `id`, you can auto-load the entity.
    *  Errors terminate the request, success sets `req[id] = data`.
@@ -19,7 +19,7 @@ export default ({
       id,
     };
 
-    Activity.findOne(filter).exec()
+    Category.findOne(filter).exec()
       .then((result) => {
         callback(null, result);
       })
@@ -29,11 +29,11 @@ export default ({
       });
   },
 
-  /** GET activities/ - List all entities */
+  /** GET categories/ - List all entities */
   list({
     params,
   }, res) {
-    Activity.find().exec()
+    Category.find().exec()
       .then(activites => res.json(activites))
       .catch((error) => {
         console.log(error);
@@ -41,50 +41,44 @@ export default ({
       });
   },
 
-  /** POST activities/ - Create a new entity */
+  /** POST categories/ - Create a new entity */
   create({
     body,
   }, res) {
-    // TODO: use icons from body as soon as users can pick them in app
-    const iconNames = ['bicycle', 'cash', 'car', 'school', 'body', 'restaurant', 'game-controller-a', 'american-football'];
-    const randomIcon = iconNames[Math.floor(Math.random() * iconNames.length)];
-
-    const newActivity = new Activity({
+    const newCategory = new Category({
       id: v4(),
       name: body.name,
-      iconname: randomIcon,
-      category: body.category,
       user: body.user,
     });
 
-    newActivity.save()
-      .then(activity => res.json(activity))
+    newCategory.save()
+      .then(category => res.json(category))
       .catch((error) => {
         console.log(error);
         res.sendStatus(500);
       });
   },
 
-  /** GET activities/:id - Return a given entity */
+  /** GET categories/:id - Return a given entity */
   read({
-    activity,
+    category,
   }, res) {
-    res.json(activity);
+    res.json(category);
   },
 
-  /** PUT activities/:id - Update a given entity */
+  /** PUT categories/:id - Update a given entity */
   update({
-    activity,
+    category,
     body,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: category.id,
     };
     const options = {
       new: true,
     };
 
-    Activity.findOneAndUpdate(filter, body, options).exec()
+    Category.findOneAndUpdate(filter, body, options).exec()
       .then(result => res.json(result))
       .catch((error) => {
         console.log(error);
@@ -92,15 +86,15 @@ export default ({
       });
   },
 
-  /** DELETE activities/:id - Delete a given entity */
+  /** DELETE categories/:id - Delete a given entity */
   delete({
-    activity,
+    category,
   }, res) {
     const filter = {
-      id: activity.id,
+      id: category.id,
     };
 
-    Activity.findOneAndRemove(filter).exec()
+    Category.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
       .catch((error) => {
         console.log(error);
