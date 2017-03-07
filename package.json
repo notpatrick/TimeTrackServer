@@ -35,7 +35,6 @@
     "express": "^4.13.3",
     "express-winston": "^2.3.0",
     "mongoose": "^4.8.5",
-    "resource-router-middleware": "^0.6.0",
     "rotating-file-stream": "^1.1.9",
     "uuid": "^3.0.1",
     "winston": "^2.3.1",

@@ -1,105 +1,91 @@
 import v4 from 'uuid/v4';
-import resource from 'resource-router-middleware';
-import User from '../models/user';
-
+import {
+  Router,
+} from 'express';
+import UserModel from '../models/user';
 
 export default ({
   config,
   db,
-}) => resource({
+}) => {
+  const router = Router();
+  const User = UserModel(db);
 
-  /** Property name to store preloaded entity on `request`. */
-  id: 'user',
+  // GET all
+  router.get('/', (req, res) => {
+    User.find().exec()
+      .then((user) => {
+        res.json(user);
+      })
+      .catch(() => {
+        res.sendStatus(500);
+      });
+  });
 
-  /** For requests with an `id`, you can auto-load the entity.
-   *  Errors terminate the request, success sets `req[id] = data`.
-   */
-  load(req, id, callback) {
+  // GET by id
+  router.get('/:id', (req, res) => {
     const filter = {
-      id,
+      id: req.params.id,
     };
 
     User.findOne(filter).exec()
-      .then((result) => {
-        callback(null, result);
+      .then((user) => {
+        if (user === null) res.sendStatus(404);
+        res.json(user);
       })
-      .catch((error) => {
-        console.log(error);
-        callback('Not found');
-      });
-  },
-
-  /** GET users/ - List all entities */
-  list({
-    params,
-  }, res) {
-    User.find().exec()
-      .then(activites => res.json(activites))
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** POST users/ - Create a new entity */
-  create({
-    body,
-  }, res) {
+  // POST
+  router.post('/', (req, res) => {
     const newUser = new User({
       id: v4(),
-      name: body.name,
-      password: body.password,
-      email: body.email,
+      name: req.body.name,
+      password: req.body.password,
+      email: req.body.email,
     });
 
     newUser.save()
-      .then(user => res.json(user))
-      .catch((error) => {
-        console.log(error);
+      .then((user) => {
+        res.json(user);
+      })
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** GET users/:id - Return a given entity */
-  read({
-    user,
-  }, res) {
-    res.json(user);
-  },
-
-  /** PUT users/:id - Update a given entity */
-  update({
-    user,
-    body,
-  }, res) {
+  // PUT
+  router.put('/:id', (req, res) => {
     const filter = {
-      id: user.id,
+      id: req.params.id,
     };
     const options = {
       new: true,
     };
 
-    User.findOneAndUpdate(filter, body, options).exec()
-      .then(result => res.json(result))
-      .catch((error) => {
-        console.log(error);
+    User.findOneAndUpdate(filter, req.body, options).exec()
+      .then((user) => {
+        res.json(user);
+      })
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** DELETE users/:id - Delete a given entity */
-  delete({
-    user,
-  }, res) {
+  // DELETE by id
+  router.delete('/:id', (req, res) => {
     const filter = {
-      id: user.id,
+      id: req.params.id,
     };
 
     User.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
-});
+  });
+
+  return router;
+};

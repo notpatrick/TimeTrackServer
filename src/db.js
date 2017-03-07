@@ -11,5 +11,5 @@ export default (callback) => {
       console.log(error);
     },
   );
-  callback();
+  callback(mongoose);
 };

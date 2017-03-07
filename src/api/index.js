@@ -1,14 +1,12 @@
 import {
   Router,
 } from 'express';
-import {
-  version,
-} from '../../package.json';
 import activities from './activities';
 import categories from './categories';
-import login from './login';
 import timesheets from './timesheets';
 import users from './users';
+import login from './login';
+import register from './register';
 
 export default ({
   config,
@@ -17,34 +15,31 @@ export default ({
   const api = Router();
 
   // mount the resources
-  api.use('/activities', activities({
-    config,
-    db,
-  }));
-
-  api.use('/categories', categories({
-    config,
-    db,
-  }));
-
-  api.use('/login', login);
-
-  api.use('/timesheets', timesheets({
-    config,
-    db,
-  }));
-
-  api.use('/users', users({
-    config,
-    db,
-  }));
-
-  // perhaps expose some API metadata at the root
-  api.get('/', (req, res) => {
-    res.json({
-      version,
-    });
-  });
+  api
+    .use('/activities', activities({
+      config,
+      db,
+    }))
+    .use('/categories', categories({
+      config,
+      db,
+    }))
+    .use('/timesheets', timesheets({
+      config,
+      db,
+    }))
+    .use('/users', users({
+      config,
+      db,
+    }))
+    .use('/login', login({
+      config,
+      db,
+    }))
+    .use('/register', register({
+      config,
+      db,
+    }));
 
   return api;
 };

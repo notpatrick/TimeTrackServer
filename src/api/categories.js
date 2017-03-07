@@ -1,104 +1,89 @@
 import v4 from 'uuid/v4';
-import resource from 'resource-router-middleware';
-import Category from '../models/category';
-
+import {
+  Router,
+} from 'express';
+import CategoryModel from '../models/category';
 
 export default ({
   config,
   db,
-}) => resource({
+}) => {
+  const router = Router();
+  const Category = CategoryModel(db);
 
-  /** Property name to store preloaded entity on `request`. */
-  id: 'category',
-
-  /** For requests with an `id`, you can auto-load the entity.
-   *  Errors terminate the request, success sets `req[id] = data`.
-   */
-  load(req, id, callback) {
-    const filter = {
-      id,
-    };
-
-    Category.findOne(filter).exec()
-      .then((result) => {
-        callback(null, result);
-      })
-      .catch((error) => {
-        console.log(error);
-        callback('Not found');
-      });
-  },
-
-  /** GET categories/ - List all entities */
-  list({
-    params,
-  }, res) {
+  // GET all
+  router.get('/', (req, res) => {
     Category.find().exec()
-      .then(activites => res.json(activites))
-      .catch((error) => {
-        console.log(error);
+      .then((categories) => {
+        res.json(categories);
+      })
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** POST categories/ - Create a new entity */
-  create({
-    body,
-  }, res) {
+  // GET by id
+  router.get('/:id', (req, res) => {
+    const filter = {
+      id: req.params.id,
+    };
+    Category.findOne(filter).exec()
+      .then((category) => {
+        if (category === null) res.sendStatus(404);
+        res.json(category);
+      })
+      .catch(() => {
+        res.sendStatus(500);
+      });
+  });
+
+  // POST
+  router.post('/', (req, res) => {
     const newCategory = new Category({
       id: v4(),
-      name: body.name,
-      user: body.user,
+      name: req.body.name,
+      user: req.body.user,
     });
 
     newCategory.save()
-      .then(category => res.json(category))
-      .catch((error) => {
-        console.log(error);
+      .then((category) => {
+        res.json(category);
+      })
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** GET categories/:id - Return a given entity */
-  read({
-    category,
-  }, res) {
-    res.json(category);
-  },
-
-  /** PUT categories/:id - Update a given entity */
-  update({
-    category,
-    body,
-  }, res) {
+  // PUT
+  router.put('/:id', (req, res) => {
     const filter = {
-      id: category.id,
+      id: req.params.id,
     };
     const options = {
       new: true,
     };
 
-    Category.findOneAndUpdate(filter, body, options).exec()
-      .then(result => res.json(result))
-      .catch((error) => {
-        console.log(error);
+    Category.findOneAndUpdate(filter, req.body, options).exec()
+      .then((category) => {
+        res.json(category);
+      })
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
+  });
 
-  /** DELETE categories/:id - Delete a given entity */
-  delete({
-    category,
-  }, res) {
+  // DELETE by id
+  router.delete('/:id', (req, res) => {
     const filter = {
-      id: category.id,
+      id: req.params.id,
     };
 
     Category.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         res.sendStatus(500);
       });
-  },
-});
+  });
+
+  return router;
+};

@@ -24,6 +24,9 @@
         "no-tabs": "warn",
         "no-param-reassign": "off",
         "one-var": "off",
-        "eol-last": "off"
+        "eol-last": "off",
+        "no-underscore-dangle": "off",
+        "arrow-body-style": "warn",
+        "arrow-parens": "warn"
     }
 }

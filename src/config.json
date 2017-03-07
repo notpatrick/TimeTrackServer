@@ -1,5 +1,10 @@
 {
 	"port": 8080,
 	"bodyLimit": "100kb",
-	"corsHeaders": ["*"]
+	"corsHeaders": ["*"],
+	"log": {
+		"path": "log",
+		"errorFile": "error.log",
+		"accessFile": "access.log"
+	}
 }

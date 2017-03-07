@@ -10,7 +10,7 @@ export default ({
 
   router.get('/', (req, res) => {
     res.send({
-      message: 'Hello World!!',
+      message: 'register!!',
     });
   });
   return router;
