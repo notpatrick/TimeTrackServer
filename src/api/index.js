@@ -3,7 +3,6 @@ import {
 } from 'express';
 import activities from './activities';
 import categories from './categories';
-import timesheets from './timesheets';
 import users from './users';
 import login from './login';
 import register from './register';
@@ -21,10 +20,6 @@ export default ({
       db,
     }))
     .use('/categories', categories({
-      config,
-      db,
-    }))
-    .use('/timesheets', timesheets({
       config,
       db,
     }))

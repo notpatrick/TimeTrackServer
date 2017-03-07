@@ -30,7 +30,7 @@ export default ({
 
     User.findOne(filter).exec()
       .then((user) => {
-        if (user === null) res.sendStatus(404);
+        if (!user) res.sendStatus(404);
         res.json(user);
       })
       .catch(() => {

@@ -11,6 +11,10 @@ export default (mongoose) => {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
     },
+    timesheets: [{
+      type: mongoose.Schema.ObjectId,
+      ref: 'Timesheet',
+    }],
   });
   return mongoose.model('Activity', activitySchema);
 };

@@ -42,7 +42,7 @@ export default ({
     const newCategory = new Category({
       id: v4(),
       name: req.body.name,
-      user: req.body.user,
+      user: req.body.user._id,
     });
 
     newCategory.save()
