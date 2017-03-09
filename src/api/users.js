@@ -33,8 +33,9 @@ export default ({
         if (!user) res.sendStatus(404);
         res.json(user);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -51,8 +52,9 @@ export default ({
       .then((user) => {
         res.json(user);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -69,8 +71,9 @@ export default ({
       .then((user) => {
         res.json(user);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -82,8 +85,9 @@ export default ({
 
     User.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 

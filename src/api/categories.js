@@ -17,8 +17,9 @@ export default ({
       .then((categories) => {
         res.json(categories);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -32,8 +33,9 @@ export default ({
         if (category === null) res.sendStatus(404);
         res.json(category);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -49,8 +51,9 @@ export default ({
       .then((category) => {
         res.json(category);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -67,8 +70,9 @@ export default ({
       .then((category) => {
         res.json(category);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -80,8 +84,9 @@ export default ({
 
     Category.findOneAndRemove(filter).exec()
       .then(res.sendStatus(204))
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 

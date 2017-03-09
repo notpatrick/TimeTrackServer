@@ -21,8 +21,9 @@ export default ({
       .then((activities) => {
         res.json(activities);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -39,8 +40,9 @@ export default ({
         if (!activity) res.sendStatus(404);
         res.json(activity);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -58,8 +60,9 @@ export default ({
       .then((activity) => {
         res.json(activity);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -73,14 +76,15 @@ export default ({
     };
 
     Activity.findOneAndUpdate(filter, req.body, options)
-      .populate('category user')
+      .populate('category user timesheets')
       .exec()
       .then((activity) => {
         if (!activity) res.sendStatus(404);
         res.json(activity);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
@@ -94,106 +98,103 @@ export default ({
       .then(() => {
         res.sendStatus(204);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 
-  router.post('/:id/start', (req, res) => {
+  // returns a Promise with an Activity in it
+  function createTimesheet(activity, startDate) {
     // Create new timesheet
     const newTimesheet = new Timesheet({
       id: v4(),
-      startDate: req.body.startDate,
+      startDate,
       endDate: undefined,
-      activity: req.params.id,
+      activity: activity._id,
     });
-    // filter to find open timesheets
+    // add it to activity.timesheets, return activity as a promise
+    return newTimesheet.save()
+      .then((timesheet) => {
+        activity.timesheets.push(timesheet._id);
+        return activity
+          .save();
+      });
+  }
+
+  // returns a closed timesheet or false if no timesheet was closed
+  function closeOpenTimesheet(endDate) {
     const filter = {
-      activity: req.params.id,
       endDate: undefined,
     };
-
-    // look for open timesheet
-    Timesheet.findOne(filter).exec()
-      .then((openTimesheet) => {
-        // check if there was a result
-        if (openTimesheet !== null) {
-          // close open timesheet with startdate of new timesheet then save new timesheet
-          openTimesheet.endDate = req.body.startDate;
-          openTimesheet.save()
-            .then(() => {
-              newTimesheet.save()
-                .then((timesheet) => {
-                  Activity
-                    .findOneAndUpdate({
-                      _id: req.params.id,
-                    }, {
-                      $push: {
-                        timesheets: timesheet._id,
-                      },
-                    })
-                    .exec()
-                    .then((activity) => {
-                      if (!activity) res.sendStatus(404);
-                      res.json(activity);
-                    });
-                  res.json(timesheet);
-                })
-                .catch(() => {
-                  res.sendStatus(500);
-                });
-            });
-        } else {
-          // if there is no open timesheet just create a new one
-          newTimesheet.save()
-            .then((timesheet) => {
-              Activity
-                .findOneAndUpdate({
-                  _id: req.params.id,
-                }, {
-                  $push: {
-                    timesheets: timesheet._id,
-                  },
-                })
-                .exec()
-                .then((activity) => {
-                  if (!activity) res.sendStatus(404);
-                  res.json(activity);
-                });
-              res.json(timesheet);
-            })
-            .catch(() => {
-              res.sendStatus(500);
+    return Timesheet.findOne(filter)
+      .populate('activity')
+      .exec()
+      .then((ts) => {
+        if (ts) {
+          // an open timesheet is found, close it with endDate and return it as a promise
+          ts.endDate = endDate;
+          return ts
+            .save()
+            .then((t) => {
+              console.log(t);
+              return t;
             });
         }
+        return Promise.resolve(false);
+      });
+  }
+
+  // req.body.activity is an activity, req.body.date is a date
+  router.post('/track', (req, res) => {
+    const postedActivity = req.body.activity;
+    const postedDate = req.body.date;
+    const filter = {
+      id: postedActivity.id,
+    };
+    closeOpenTimesheet(postedDate)
+      .then((result) => {
+        if (result) {
+          console.log(result.activity.id, postedActivity.id);
+          if (result.activity.id === postedActivity.id) {
+            // posted activity was the open one, so just return the updated activity
+            return Activity.findOne(filter)
+              .populate('category user timesheets')
+              .exec();
+          }
+        }
+        // posted activity was not the open one or no timesheet was closed
+        // so create a timesheet for postedActivity and return the updated activity
+        return Activity.findOne(filter)
+          .populate('category user timesheets')
+          .exec()
+          .then(activity => createTimesheet(activity, postedDate))
+          .then(activity => Activity
+            .findOne(activity)
+            .populate('category user timesheets')
+            .exec());
       })
-      .catch(() => {
+      .then(activity => res.json(activity))
+      .catch((error) => {
+        console.error(error);
         res.sendStatus(500);
+        throw error;
       });
   });
 
-  router.post('/:id/stop', (req, res) => {
-    // find timesheet for this activity with no endDate
-    const filter = {
-      activity: req.params.id,
-      endDate: undefined,
-    };
-    // return timesheet with updated properties
-    const options = {
-      new: true,
-    };
-    // set endDate to now
-    const update = {
-      endDate: req.body.endDate,
-    };
-
-    Timesheet.findOneAndUpdate(filter, update, options).exec()
-      .then((timesheet) => {
-        if (!timesheet) res.sendStatus(404); // didn't find an open timesheet
-        res.json(timesheet); // return updated timesheet
+  router.post('/debug/clearTimesheets', (req, res) => {
+    Activity.find().exec()
+      .then((activities) => {
+        activities.forEach((activity) => {
+          activity.timesheets = [];
+          activity.save();
+        });
+        Timesheet.remove({}).exec();
+        res.sendStatus(204);
       })
-      .catch(() => {
+      .catch((error) => {
         res.sendStatus(500);
+        throw error;
       });
   });
 

@@ -37,7 +37,7 @@ export const errorLogger = expressWinston.errorLogger({
 
 export const accessLogger = expressWinston.logger({
   transports: [
-    new winston.transports.Console(formatWinston.config()),
+    //new winston.transports.Console(formatWinston.config()),
     new winston.transports.File({
       json: false,
       stream: accessLogStream,
