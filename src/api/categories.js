@@ -7,6 +7,8 @@ import CategoryModel from '../models/category';
 export default ({
   config,
   db,
+  Activity,
+  Timesheet,
 }) => {
   const router = Router();
   const Category = CategoryModel(db);

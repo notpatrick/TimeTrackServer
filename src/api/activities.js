@@ -8,10 +8,10 @@ import TimesheetModel from '../models/timesheet';
 export default ({
   config,
   db,
+  Activity,
+  Timesheet,
 }) => {
   const router = Router();
-  const Activity = ActivityModel(db);
-  const Timesheet = TimesheetModel(db);
 
   // GET all
   router.get('/', (req, res) => {
@@ -136,10 +136,7 @@ export default ({
           ts.endDate = endDate;
           return ts
             .save()
-            .then((t) => {
-              console.log(t);
-              return t;
-            });
+            .then(resultTimesheet => resultTimesheet);
         }
         return Promise.resolve(false);
       });
@@ -147,55 +144,31 @@ export default ({
 
   // req.body.activity is an activity, req.body.date is a date
   router.post('/track', (req, res) => {
-    const postedActivity = req.body.activity;
-    const postedDate = req.body.date;
-    const filter = {
-      id: postedActivity.id,
+    const request = {
+      date: req.body.date,
+      timesheet: req.body.timesheet,
+      activity: req.body.activity,
     };
-    closeOpenTimesheet(postedDate)
-      .then((result) => {
-        if (result) {
-          console.log(result.activity.id, postedActivity.id);
-          if (result.activity.id === postedActivity.id) {
-            // posted activity was the open one, so just return the updated activity
-            return Activity.findOne(filter)
-              .populate('category user timesheets')
-              .exec();
+    if (request.timesheet._id) {
+      const filter = {
+        id: request.timesheet.id,
+      };
+      Timesheet.findOne(filter).exec()
+        .then((ts) => {
+          const isOpen = !ts.endDate;
+          if (isOpen) {
+            // close
+          } else {
+            // existing timestamp is not open, something went wrong -> server/client data not sync
           }
-        }
-        // posted activity was not the open one or no timesheet was closed
-        // so create a timesheet for postedActivity and return the updated activity
-        return Activity.findOne(filter)
-          .populate('category user timesheets')
-          .exec()
-          .then(activity => createTimesheet(activity, postedDate))
-          .then(activity => Activity
-            .findOne(activity)
-            .populate('category user timesheets')
-            .exec());
-      })
-      .then(activity => res.json(activity))
-      .catch((error) => {
-        console.error(error);
-        res.sendStatus(500);
-        throw error;
-      });
-  });
-
-  router.post('/debug/clearTimesheets', (req, res) => {
-    Activity.find().exec()
-      .then((activities) => {
-        activities.forEach((activity) => {
-          activity.timesheets = [];
-          activity.save();
+        })
+        .catch((error) => {
+          res.sendStatus(500);
+          throw error;
         });
-        Timesheet.remove({}).exec();
-        res.sendStatus(204);
-      })
-      .catch((error) => {
-        res.sendStatus(500);
-        throw error;
-      });
+    } else {
+      // create new timesheet
+    }
   });
 
   return router;

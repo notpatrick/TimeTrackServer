@@ -7,6 +7,8 @@ import UserModel from '../models/user';
 export default ({
   config,
   db,
+  Activity,
+  Timesheet,
 }) => {
   const router = Router();
   const User = UserModel(db);

@@ -5,6 +5,8 @@ import {
 export default ({
   config,
   db,
+  Activity,
+  Timesheet,
 }) => {
   const router = Router();
 
