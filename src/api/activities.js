@@ -22,7 +22,7 @@ export default ({
         res.json(activities);
       })
       .catch((error) => {
-        res.sendStatus(500);
+        res.status(500).body(error).send();
         throw error;
       });
   });
@@ -41,7 +41,7 @@ export default ({
         res.json(activity);
       })
       .catch((error) => {
-        res.sendStatus(500);
+        res.status(500).body(error).send();
         throw error;
       });
   });
@@ -61,7 +61,7 @@ export default ({
         res.json(activity);
       })
       .catch((error) => {
-        res.sendStatus(500);
+        res.status(500).body(error).send();
         throw error;
       });
   });
@@ -83,7 +83,7 @@ export default ({
         res.json(activity);
       })
       .catch((error) => {
-        res.sendStatus(500);
+        res.status(500).body(error).send();
         throw error;
       });
   });
@@ -99,46 +99,50 @@ export default ({
         res.sendStatus(204);
       })
       .catch((error) => {
-        res.sendStatus(500);
+        res.status(500).body(error).send();
         throw error;
       });
   });
-
-  // returns a Promise with an Activity in it
-  function createTimesheet(activity, startDate) {
-    // Create new timesheet
-    const newTimesheet = new Timesheet({
-      id: v4(),
-      startDate,
-      endDate: undefined,
-      activity: activity._id,
-    });
-    // add it to activity.timesheets, return activity as a promise
-    return newTimesheet.save()
-      .then((timesheet) => {
-        activity.timesheets.push(timesheet._id);
-        return activity
-          .save();
-      });
-  }
-
   // returns a closed timesheet or false if no timesheet was closed
-  function closeOpenTimesheet(endDate) {
+  function closeAllOpenTimesheets(endDate) {
     const filter = {
       endDate: undefined,
     };
-    return Timesheet.findOne(filter)
-      .populate('activity')
+    return Timesheet.find(filter)
       .exec()
-      .then((ts) => {
-        if (ts) {
-          // an open timesheet is found, close it with endDate and return it as a promise
-          ts.endDate = endDate;
-          return ts
+      .then((foundTimesheet) => {
+        if (!foundTimesheet) return Promise.resolve(false);
+        // an open timesheet is found, close it with endDate and return it as a promise
+        foundTimesheet.forEach((timesheet) => {
+          timesheet.endDate = endDate;
+          return timesheet
             .save()
             .then(resultTimesheet => resultTimesheet);
-        }
+        });
         return Promise.resolve(false);
+      });
+  }
+
+  function createTimesheet(request) {
+    // create new timesheet
+    const newTimesheet = new Timesheet(request.timesheet);
+
+    return newTimesheet
+      .save()
+      .then((savedTimesheet) => {
+        const filter = {
+          id: request.activity.id,
+        };
+        return Activity
+          .findOne(filter)
+          .exec()
+          .then((foundActivity) => {
+            foundActivity.timesheets.push(savedTimesheet._id);
+            return foundActivity.save();
+          })
+          .then(savedActivity => Activity.populate(savedActivity, {
+            path: 'category user timesheets',
+          }));
       });
   }
 
@@ -149,26 +153,43 @@ export default ({
       timesheet: req.body.timesheet,
       activity: req.body.activity,
     };
-    if (request.timesheet._id) {
-      const filter = {
-        id: request.timesheet.id,
-      };
-      Timesheet.findOne(filter).exec()
-        .then((ts) => {
-          const isOpen = !ts.endDate;
+    const timesheetFilter = {
+      id: request.timesheet.id,
+    };
+
+    Timesheet
+      .findOne(timesheetFilter)
+      .exec()
+      .then((existingTimesheet) => {
+        if (existingTimesheet) {
+          const isOpen = !existingTimesheet.endDate;
           if (isOpen) {
-            // close
+            // close timesheet and return updated activity
+            existingTimesheet.endDate = request.date;
+            existingTimesheet
+              .save()
+              .then(() => {
+                const filter = {
+                  id: request.activity.id,
+                };
+                Activity
+                  .findOne(filter)
+                  .populate('category user timesheets')
+                  .exec()
+                  .then(updatedActivity => res.send(updatedActivity));
+              });
           } else {
-            // existing timestamp is not open, something went wrong -> server/client data not sync
+            res.sendStatus(500);
           }
-        })
-        .catch((error) => {
-          res.sendStatus(500);
-          throw error;
-        });
-    } else {
-      // create new timesheet
-    }
+        } else {
+          closeAllOpenTimesheets(request.date)
+            .then(createTimesheet(request).then(populatedActivity => res.send(populatedActivity)));
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        res.sendStatus(500);
+      });
   });
 
   return router;
